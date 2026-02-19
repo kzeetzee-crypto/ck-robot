@@ -1,0 +1,8 @@
+{
+  "name": "ck-robot",
+  "version": "1.0.0",
+  "main": "robot.js",
+  "dependencies": {
+    "firebase-admin": "^11.0.0"
+  }
+}
