@@ -1,6 +1,6 @@
 const admin = require("firebase-admin");
 
-// Render မှာ ထည့်မယ့် FIREBASE_KEY variable ကနေ ဖတ်မယ်
+// Render ရဲ့ Environment Variable ကနေ Key ကို ဖတ်ခြင်း
 const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
 
 admin.initializeApp({
@@ -10,29 +10,25 @@ admin.initializeApp({
 
 const db = admin.database();
 
-function generateResult() {
+console.log("စက်ရုပ်ကို ၁ မိနစ်တစ်ခါ ပို့ရန် စတင်လိုက်ပါပြီ...");
+
+// ၁ မိနစ် (၆၀၀၀၀ မီလီစက္ကန့်) တိုင်း အလုပ်လုပ်မည့် စနစ်
+setInterval(() => {
     const now = new Date();
-    // Period ID ကို CK ပုံစံအတိုင်း ထုတ်ခြင်း (နာရီ+မိနစ်)
-    const pid = now.getHours().toString().padStart(2,'0') + now.getMinutes().toString().padStart(2,'0');
+    // နာရီနှင့် မိနစ်ကိုပေါင်းပြီး Period လုပ်ခြင်း (ဥပမာ - 1505)
+    const pid = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
     
-    db.ref('admin/next_result').once('value', (snapshot) => {
-        let res = snapshot.val();
-        if (res === "Auto" || !res) {
-            res = Math.random() > 0.5 ? "Big" : "Small";
+    // Big သို့မဟုတ် Small ကို ကျပန်းရွေးခြင်း
+    const result = Math.random() > 0.5 ? "Big" : "Small";
+
+    // Firebase သို့ 'history' node အောက်မှာ သိမ်းဆည်းခြင်း
+    db.ref('history/' + pid).set({
+        period: pid,
+        result: result
+    }, (error) => {
+        if (!error) {
+            console.log("ပို့ပြီးပြီ - Period #" + pid + " : " + result);
         }
-
-        db.ref('history').push({
-            pid: pid,
-            res: res,
-            time: now.toISOString()
-        }).then(() => {
-            console.log(`Period #${pid} : ${res} ထွက်ပြီး`);
-            // ရလဒ်ထွက်ပြီးရင် Auto ပြန်ပြောင်းမယ်
-            db.ref('admin/next_result').set("Auto");
-        });
     });
-}
 
-// ၁ မိနစ်တစ်ခါ အလုပ်လုပ်ခိုင်းခြင်း
-setInterval(generateResult, 60000);
-console.log("CK Robot is active and waiting for next minute...");
+}, 60000); 
